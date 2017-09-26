@@ -1,46 +1,58 @@
 import math
 import sys
+import pandas as pd
+import numpy as np
 
 def main():
     if len(sys.argv) != 3:
-        print ("Please enter two arguments <train.dat> <test.dat>")
+        print ("Please execute with two arguments <train.dat> <test.dat>")
         exit()
     # Reading in data just reading in the training file (train.dat)
     with open(sys.argv[1]) as trainingFile, open(sys.argv[2]) as testFile:
-        first_line = trainingFile.readline()
-        attributes = first_line.split()
+        firstLine = trainingFile.readline()
+        headers = firstLine.split()
 
-        trainingData = []
+        print(headers)
+
+        trainingLists = []
         for line in trainingFile:
-            trainingData.append(list(line.strip().replace('\t', '')))
+            trainingLists.append(list(line.strip().replace('\t', '')))
 
-        # print(trainingData)
+        # Convert training data into a pandas dataframe
+        trainingDF = pd.DataFrame.from_records(trainingLists, columns=headers)
+
+        print(trainingDF)
 
         # Calculate most frequent class, set global instead of passing mostFrequentClassOverall or full dataset around to ever function
-        total = 0
-        for each in trainingData:
-            total += int(each[attributes.index("class")])
-        global mostFrequentClassOverall
-        mostFrequentClassOverall \
-            = round(total / len(trainingData))
+        # total = 0
+        # for each in trainingDF:
+        #     total += int(each[headers.index("class")])
+        # global mostFrequentClassOverall
+        # mostFrequentClassOverall \
+        #     = round(total / len(trainingDF))
 
 
         # Where the magic happens
         
 
         # Accuracy on training set
-        # trainingAccuracy = getAccuracy(headNode, trainingData)
-        # print("Accuracy on training set (" + str(len(trainingData)) + "): " + "{0:.1f}".format(trainingAccuracy) + "%")
+        # trainingAccuracy = getAccuracy(headNode, trainingDF)
+        # print("Accuracy on training set (" + str(len(trainingDF)) + "): " + "{0:.1f}".format(trainingAccuracy) + "%")
 
         # Parse Test data
-        testData = []
+        testLists = []
         for line in testFile:
-            testData.append(line.strip().replace('\t', ''))
-        testData.pop(0)  # Remove headers
+            testLists.append(line.strip().replace('\t', ''))
+        testLists.pop(0)  # Remove headers
+
+        # Convert test data into a pandas dataframe
+        testDF = pd.DataFrame.from_records(testLists, columns=headers)
+
+        print(testDF)
 
         # Accuracy on test set
-        # testAccuracy = getAccuracy(headNode, testData)
-        # print("Accuracy on test set (" + str(len(testData)) + "): " + "{0:.1f}".format(testAccuracy) + "%")
+        # testAccuracy = getAccuracy(headNode, testLists)
+        # print("Accuracy on test set (" + str(len(testLists)) + "): " + "{0:.1f}".format(testAccuracy) + "%")
 
 
 if __name__ == "__main__":
