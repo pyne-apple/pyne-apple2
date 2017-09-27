@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 
 mostFrequentClassOverall = -1
+dictsOfProbsForClass1 = []
+dictsOfProbsForClass0 = []
 
 def main():
     if len(sys.argv) != 3:
@@ -27,11 +29,12 @@ def main():
 
 
         # Calculate most frequent class, set global instead of passing mostFrequentClassOverall or full dataset around to ever function
+        #Priyanka comment = I break down the df into a smaller one where the class is 1 then 
+        # go from there
         class1trainingDF = trainingDF.loc[trainingDF['class'] == '1']
-        print(len(class1trainingDF.index))
-        probOfClass1 = len(class1trainingDF.index)/len(trainingDF)
-        print(probOfClass1)
-        print ("P(C=1)=%.2f"%probOfClass1, end='')
+        totalProbOfClass1 = len(class1trainingDF.index)/len(trainingDF)
+        print(totalProbOfClass1)
+        print ("P(C=1)=%.2f"%totalProbOfClass1, end='')
         for attribute in headers:
             if attribute.lower() == "class":
                 continue
@@ -40,15 +43,17 @@ def main():
                 probOfAttribute1GivenClass1 = len(attribute1GivenClass1.index)/len(class1trainingDF)
                 probOfAttribute0GivenClass1 = 1 - probOfAttribute1GivenClass1
                 print (' P(', attribute, '=1|C=1)=%.2f'%probOfAttribute1GivenClass1, end='')
+                #storing things into dictionary because we're going to need it in the classification
+                dictsOfProbsForClass1.append({"attribute": attribute, "class" : '1', "probability" :probOfAttribute1GivenClass1})
                 print (' P(', attribute, '=0|C=1)=%.2f'%probOfAttribute0GivenClass1, end='')
-
+                dictsOfProbsForClass1.append({"attribute": attribute, "class": '0', "probability": probOfAttribute0GivenClass1})
+        print()
         print ()
 
         class0trainingDF = trainingDF.loc[trainingDF['class'] == '0']
-        print(len(class0trainingDF.index))
-        probOfClass0 = len(class0trainingDF.index) / len(trainingDF)
-        print(probOfClass0)
-        print("P(C=0)=%.2f" % probOfClass0, end='')
+        totalProbOfClass0 = len(class0trainingDF.index) / len(trainingDF)
+        print(totalProbOfClass0)
+        print("P(C=0)=%.2f" % totalProbOfClass0, end='')
         for attribute in headers:
             if attribute.lower() == "class":
                 continue
@@ -57,10 +62,14 @@ def main():
                 probOfAttribute1GivenClass0 = len(attribute1GivenClass0.index) / len(class0trainingDF)
                 probOfAttribute0GivenClass0 = 1 - probOfAttribute1GivenClass0
                 print(' P(', attribute, '=1|C=0)=%.2f' % probOfAttribute1GivenClass0, end='')
+                dictsOfProbsForClass0.append({"attribute" : attribute, "class": '1', "probability" : probOfAttribute1GivenClass0})
                 print(' P(', attribute, '=0|C=0)=%.2f' % probOfAttribute0GivenClass0, end='')
+                dictsOfProbsForClass0.append({"attribute": attribute, "class": '0', "probability": probOfAttribute1GivenClass0})
 
         print()
-        
+
+
+
         # total = 0
         # for each in trainingDF:
         #     total += int(each[headers.index("class")])
@@ -90,6 +99,20 @@ def main():
         # Accuracy on test set
         # testAccuracy = getAccuracy(headNode, testLists)
         # print("Accuracy on test set (" + str(len(testLists)) + "): " + "{0:.1f}".format(testAccuracy) + "%")
+        probOfClassifying1(trainingDF)
+
+###NOT COMPLETED###
+#I'm so sleepy!
+def probOfClassifying1(trainingDF):
+    multiplyingTotal = 1
+    for row in trainingDF:
+        for each in trainingDF.columns.values.tolist(): #getting each argument
+            if each.lower() == 'class':
+                continue
+
+
+
+
 
 
 if __name__ == "__main__":
