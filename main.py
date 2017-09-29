@@ -45,7 +45,7 @@ def main():
                 # Extract all rows with the specific attribute A == 1
                 attribute1GivenClass1 = class1trainingDF.loc[class1trainingDF[attribute] == '1']
                 # P(A | C) = #A&C / #C
-                probOfAttribute1GivenClass1 = len(attribute1GivenClass1.index)/len(class1trainingDF)
+                probOfAttribute1GivenClass1 = len(attribute1GivenClass1)/len(class1trainingDF)
                 # P(A! | C) = 1 - P(A | C)
                 probOfAttribute0GivenClass1 = 1 - probOfAttribute1GivenClass1
                 print (' P(' +  str(attribute) + '=1|C=1)=%.2f'%probOfAttribute1GivenClass1, end='')
@@ -59,7 +59,6 @@ def main():
         class0trainingDF = trainingDF.loc[trainingDF['class'] == '0']
         totalProbOfClass0 = len(class0trainingDF.index) / len(trainingDF)
         dictsOfProbsForClass0["totalProbOfClass"] = totalProbOfClass0
-        # print(totalProbOfClass0)
         print("P(C=0)=%.2f" % totalProbOfClass0, end='')
         for attribute in headers:
             if attribute.lower() == "class":
@@ -68,13 +67,13 @@ def main():
                 # Extract all rows with the specific attribute A == 0
                 attribute1GivenClass0 = class0trainingDF.loc[class0trainingDF[attribute] == '1']
                 # P(A | C!) = #A&C! / #C!
-                probOfAttribute1GivenClass0 = len(attribute1GivenClass0.index) / len(class0trainingDF)
+                probOfAttribute1GivenClass0 = len(attribute1GivenClass0) / len(class0trainingDF)
                 # P(A! | C!) = 1 - P(A | C!)s
                 probOfAttribute0GivenClass0 = 1 - probOfAttribute1GivenClass0
                 print(' P(' + str(attribute) + '=1|C=0)=%.2f' % probOfAttribute1GivenClass0, end='')
                 dictsOfProbsForClass0[attribute + '1'] = probOfAttribute1GivenClass0
                 print(' P(' + str(attribute) + '=0|C=0)=%.2f' % probOfAttribute0GivenClass0, end='')
-                dictsOfProbsForClass0[attribute + '0'] = probOfAttribute1GivenClass0
+                dictsOfProbsForClass0[attribute + '0'] = probOfAttribute0GivenClass0
                 
         print()
         print()
@@ -116,15 +115,11 @@ def accuracyOfClassifier(setDF, dictsOfProbsForClass0, dictsOfProbsForClass1):
         probClass1 *= dictsOfProbsForClass1["totalProbOfClass"]
         
         # Check for correctness
-        estimatedClass = '0' if probClass0 > probClass1 else '1'
+        estimatedClass = '0' if probClass0 >= probClass1 else '1'
         if estimatedClass == row['class']:
             correct += 1
 
     return 100 * correct / len(setDF)
-
-
-
-
 
 if __name__ == "__main__":
     main()
