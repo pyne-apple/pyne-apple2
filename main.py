@@ -4,8 +4,10 @@ import pandas as pd
 import numpy as np
 
 mostFrequentClassOverall = -1
-dictsOfProbsForClass1 = []
-dictsOfProbsForClass0 = []
+dictsOfProbsForClass1 = {}
+dictsOfProbsForClass0 = {}
+
+# python main.py train.dat test.dat
 
 def main():
     if len(sys.argv) != 3:
@@ -33,57 +35,53 @@ def main():
         # go from there
         class1trainingDF = trainingDF.loc[trainingDF['class'] == '1']
         totalProbOfClass1 = len(class1trainingDF.index)/len(trainingDF)
-        print(totalProbOfClass1)
+        dictsOfProbsForClass1["totalProbOfClass"] = totalProbOfClass1
+        # print(totalProbOfClass1)
         print ("P(C=1)=%.2f"%totalProbOfClass1, end='')
         for attribute in headers:
             if attribute.lower() == "class":
                 continue
             else:
+                # Extract all rows with the specific attribute A == 1
                 attribute1GivenClass1 = class1trainingDF.loc[class1trainingDF[attribute] == '1']
+                # P(A | C) = #A&C / #C
                 probOfAttribute1GivenClass1 = len(attribute1GivenClass1.index)/len(class1trainingDF)
+                # P(A! | C) = 1 - P(A | C)
                 probOfAttribute0GivenClass1 = 1 - probOfAttribute1GivenClass1
-                print (' P(', attribute, '=1|C=1)=%.2f'%probOfAttribute1GivenClass1, end='')
+                print (' P(' +  str(attribute) + '=1|C=1)=%.2f'%probOfAttribute1GivenClass1, end='')
                 #storing things into dictionary because we're going to need it in the classification
-                dictsOfProbsForClass1.append({"attribute": attribute, "class" : '1', "probability" :probOfAttribute1GivenClass1})
-                print (' P(', attribute, '=0|C=1)=%.2f'%probOfAttribute0GivenClass1, end='')
-                dictsOfProbsForClass1.append({"attribute": attribute, "class": '0', "probability": probOfAttribute0GivenClass1})
+                dictsOfProbsForClass1[attribute + '1'] = probOfAttribute1GivenClass1
+                print (' P(' + str(attribute) + '=0|C=1)=%.2f'%probOfAttribute0GivenClass1, end='')
+                dictsOfProbsForClass1[attribute + '0'] = probOfAttribute0GivenClass1
         print()
-        print ()
+        print()
 
         class0trainingDF = trainingDF.loc[trainingDF['class'] == '0']
         totalProbOfClass0 = len(class0trainingDF.index) / len(trainingDF)
-        print(totalProbOfClass0)
+        dictsOfProbsForClass0["totalProbOfClass"] = totalProbOfClass0
+        # print(totalProbOfClass0)
         print("P(C=0)=%.2f" % totalProbOfClass0, end='')
         for attribute in headers:
             if attribute.lower() == "class":
                 continue
             else:
+                # Extract all rows with the specific attribute A == 0
                 attribute1GivenClass0 = class0trainingDF.loc[class0trainingDF[attribute] == '1']
+                # P(A | C!) = #A&C! / #C!
                 probOfAttribute1GivenClass0 = len(attribute1GivenClass0.index) / len(class0trainingDF)
+                # P(A! | C!) = 1 - P(A | C!)s
                 probOfAttribute0GivenClass0 = 1 - probOfAttribute1GivenClass0
-                print(' P(', attribute, '=1|C=0)=%.2f' % probOfAttribute1GivenClass0, end='')
-                dictsOfProbsForClass0.append({"attribute" : attribute, "class": '1', "probability" : probOfAttribute1GivenClass0})
-                print(' P(', attribute, '=0|C=0)=%.2f' % probOfAttribute0GivenClass0, end='')
-                dictsOfProbsForClass0.append({"attribute": attribute, "class": '0', "probability": probOfAttribute1GivenClass0})
-
+                print(' P(' + str(attribute) + '=1|C=0)=%.2f' % probOfAttribute1GivenClass0, end='')
+                dictsOfProbsForClass0[attribute + '1'] = probOfAttribute1GivenClass0
+                print(' P(' + str(attribute) + '=0|C=0)=%.2f' % probOfAttribute0GivenClass0, end='')
+                dictsOfProbsForClass0[attribute + '0'] = probOfAttribute1GivenClass0
+                
+        print()
         print()
 
-
-
-        # total = 0
-        # for each in trainingDF:
-        #     total += int(each[headers.index("class")])
-        # global mostFrequentClassOverall
-        # mostFrequentClassOverall \
-        #     = round(total / len(trainingDF))
-
-
-        # Where the magic happens
-        
-
         # Accuracy on training set
-        # trainingAccuracy = getAccuracy(headNode, trainingDF)
-        # print("Accuracy on training set (" + str(len(trainingDF)) + "): " + "{0:.1f}".format(trainingAccuracy) + "%")
+        trainingAccuracy = accuracyOfClassifier(trainingDF, dictsOfProbsForClass0, dictsOfProbsForClass1)
+        print("Accuracy on training set (" + str(len(trainingDF)) + " instances) : " + "{0:.1f}".format(trainingAccuracy) + "%")
 
         # Parse Test data
         testLists = []
@@ -96,20 +94,33 @@ def main():
 
         #print(testDF)
 
+        # print(dictsOfProbsForClass0)
+
         # Accuracy on test set
-        # testAccuracy = getAccuracy(headNode, testLists)
-        # print("Accuracy on test set (" + str(len(testLists)) + "): " + "{0:.1f}".format(testAccuracy) + "%")
-        probOfClassifying1(trainingDF)
+        testAccuracy = accuracyOfClassifier(testDF, dictsOfProbsForClass0, dictsOfProbsForClass1)
+        print("Accuracy on test set (" + str(len(testDF)) + " instances) : " + "{0:.1f}".format(testAccuracy) + "%")
 
-###NOT COMPLETED###
-#I'm so sleepy!
-def probOfClassifying1(trainingDF):
-    multiplyingTotal = 1
-    for row in trainingDF:
-        for each in trainingDF.columns.values.tolist(): #getting each argument
-            if each.lower() == 'class':
+def accuracyOfClassifier(setDF, dictsOfProbsForClass0, dictsOfProbsForClass1):
+    correct = 0
+    for index, row in setDF.iterrows():
+        probClass0 = probClass1 = 1
+        for attribute in setDF.columns.values.tolist(): #getting each argument
+            if attribute.lower() == 'class':
                 continue
+            # Multiply by the P(X|C)
+            probClass0 *= dictsOfProbsForClass0[attribute + row[attribute]]
+            probClass1 *= dictsOfProbsForClass1[attribute + row[attribute]]
 
+        # Multiply by P(C)
+        probClass0 *= dictsOfProbsForClass0["totalProbOfClass"]
+        probClass1 *= dictsOfProbsForClass1["totalProbOfClass"]
+        
+        # Check for correctness
+        estimatedClass = '0' if probClass0 > probClass1 else '1'
+        if estimatedClass == row['class']:
+            correct += 1
+
+    return 100 * correct / len(setDF)
 
 
 
